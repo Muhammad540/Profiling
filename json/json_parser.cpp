@@ -17,6 +17,7 @@ Token Lexer::readString() {
     size_t start = position;
     while (position < input.length() && input[position] != '"'){
         // In this simple impl, we dont handle escaped quotes \"
+        position++;
     }
     if (position >= input.length()){
         throw std::runtime_error("Unterminated string");
@@ -121,5 +122,66 @@ JsonValue Parser::parseObject(){
         expect(TokenType::RBRACE);
         return JsonValue(obj);
     }
-    //TODO
+
+    while (true) {
+        if (currentToken.type != TokenType::STRING){
+            throw std::runtime_error("expected string key");
+        }
+        std::string key = currentToken.value;
+        expect(TokenType::STRING);
+        expect(TokenType::COLON);
+        obj[key] = parseValue();
+        if (currentToken.type == TokenType::RBRACE){
+            break;
+        }
+        expect(TokenType::COMMA);
+    }
+    expect(TokenType::RBRACE);
+    return JsonValue(obj);
+}
+
+JsonValue Parser::parseArray(){
+    expect(TokenType::LBRACKET);
+    JsonArray arr;
+
+    if (currentToken.type == TokenType::RBRACKET){
+        expect(TokenType::RBRACKET);
+        return JsonValue(arr);
+    }
+
+    while (true){
+        arr.push_back(parseValue());
+        if (currentToken.type == TokenType::RBRACKET){
+            break;
+        }
+        expect(TokenType::COMMA);
+    }
+    expect(TokenType::RBRACKET);
+    return JsonValue(arr);
+}
+
+JsonValue Parser::parseString(){
+    std::string result = currentToken.value;
+    expect(TokenType::STRING);
+    return JsonValue(result);
+}
+
+JsonValue Parser::parseNumber(){
+    // NOTE: std::stod converts string to double
+    std::string result = currentToken.value;
+    expect(TokenType::NUMBER);
+    return JsonValue(std::stod(result));
+}
+
+JsonValue Parser::parseKeyword(){
+    if (currentToken.type == TokenType::BOOLEAN){
+        bool result = (currentToken.value == "true");
+        expect(TokenType::BOOLEAN);
+        return JsonValue(result);
+    }
+    if (currentToken.type == TokenType::NULL_T){
+        expect(TokenType::NULL_T);
+        return JsonValue(nullptr);
+    }
+    throw std::runtime_error("unexpected token when parsing keyword");
 }
