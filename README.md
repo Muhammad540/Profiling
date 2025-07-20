@@ -32,3 +32,6 @@ I used the RDTSC instruction to measure the time elapsed in critical sections of
 - **Misc Output:** 30624 TSC ticks (0.54% of total)
 
 As can be seen the JSON parsing is the most time consuming part of the code. I am not saying JSON is bad, but clearly we can do better :)
+
+Takeaway:
+- Text formats are slow and binary formats are significantly simpler and CPU friendly.
